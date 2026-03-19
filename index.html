@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visaflow · Call Script</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f4f3ef;
+  --white: #ffffff;
+  --border: #e0ddd6;
+  --text: #1a1a1a;
+  --muted: #8a8880;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+  --c1: #2563a8;
+  --c2: #7c3aad;
+  --c3: #1a7a4a;
+  --c4: #b45309;
+  --c5: #b91c1c;
+  --c6: #0e7490;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.brand {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--c1);
+  background: rgba(37,99,168,.08); padding: 5px 10px; border-radius: 4px;
+}
+.topbar-title { font-size: 15px; font-weight: 600; }
+.progress-wrap { display: flex; align-items: center; gap: 6px; }
+.prog-dot {
+  width: 28px; height: 5px; border-radius: 3px;
+  background: var(--border); transition: background 0.3s; cursor: pointer;
+}
+.prog-dot.active { background: var(--c1); }
+.prog-dot.done   { background: #a8c4e8; }
+.phase-counter {
+  font-size: 12px; color: var(--muted);
+  font-family: 'DM Mono', monospace; margin-left: 8px;
+}
+
+/* LAYOUT */
+.layout { display: flex; flex: 1; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 190px; flex-shrink: 0; padding: 24px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 53px; height: calc(100vh - 53px);
+  overflow-y: auto; background: var(--white); border-right: 1px solid var(--border);
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 6px; cursor: pointer;
+  transition: all 0.18s; border: 1px solid transparent;
+}
+.sidebar-item:hover { background: var(--bg); }
+.sidebar-item.active { background: var(--bg); border-color: var(--border); }
+.s-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+  background: var(--bg); color: var(--muted); transition: all 0.2s;
+}
+.s-label { font-size: 13px; font-weight: 500; color: var(--muted); transition: color 0.2s; line-height: 1.3; }
+.sidebar-item.active .s-label { color: var(--text); font-weight: 600; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 8px 4px; }
+
+.sidebar-item.p1.active .s-num { background: rgba(37,99,168,.12); color: var(--c1); }
+.sidebar-item.p2.active .s-num { background: rgba(124,58,173,.12); color: var(--c2); }
+.sidebar-item.p3.active .s-num { background: rgba(26,122,74,.12);  color: var(--c3); }
+.sidebar-item.p4.active .s-num { background: rgba(180,83,9,.12);   color: var(--c4); }
+.sidebar-item.p5.active .s-num { background: rgba(185,28,28,.12);  color: var(--c5); }
+.sidebar-item.p6.active .s-num { background: rgba(14,116,144,.12); color: var(--c6); }
+
+/* MAIN */
+.main { flex: 1; padding: 32px 40px; max-width: 800px; }
+
+/* PHASE BLOCK */
+.phase-block { display: none; flex-direction: column; gap: 16px; animation: fadeIn 0.2s ease; }
+.phase-block.visible { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.phase-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.phase-icon {
+  width: 38px; height: 38px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.phase-heading h2 { font-size: 21px; font-weight: 700; }
+.phase-heading .phase-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+.phase-icon.p1 { background: rgba(37,99,168,.1); }
+.phase-icon.p2 { background: rgba(124,58,173,.1); }
+.phase-icon.p3 { background: rgba(26,122,74,.1); }
+.phase-icon.p4 { background: rgba(180,83,9,.1); }
+.phase-icon.p5 { background: rgba(185,28,28,.1); }
+.phase-icon.p6 { background: rgba(14,116,144,.1); }
+
+.phase-heading.p1 h2 { color: var(--c1); }
+.phase-heading.p2 h2 { color: var(--c2); }
+.phase-heading.p3 h2 { color: var(--c3); }
+.phase-heading.p4 h2 { color: var(--c4); }
+.phase-heading.p5 h2 { color: var(--c5); }
+.phase-heading.p6 h2 { color: var(--c6); }
+
+/* CARD */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; box-shadow: var(--shadow);
+}
+.card.p1 { border-top: 3px solid var(--c1); }
+.card.p2 { border-top: 3px solid var(--c2); }
+.card.p3 { border-top: 3px solid var(--c3); }
+.card.p4 { border-top: 3px solid var(--c4); }
+.card.p5 { border-top: 3px solid var(--c5); }
+.card.p6 { border-top: 3px solid var(--c6); }
+
+.card-header { padding: 12px 18px 0; }
+.card-tag {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; font-family: 'DM Mono', monospace;
+  padding: 3px 8px; border-radius: 4px;
+}
+.card-tag.t1 { background: rgba(37,99,168,.1);  color: var(--c1); }
+.card-tag.t2 { background: rgba(124,58,173,.1); color: var(--c2); }
+.card-tag.t3 { background: rgba(26,122,74,.1);  color: var(--c3); }
+.card-tag.t4 { background: rgba(180,83,9,.1);   color: var(--c4); }
+.card-tag.t5 { background: rgba(185,28,28,.1);  color: var(--c5); }
+.card-tag.t6 { background: rgba(14,116,144,.1); color: var(--c6); }
+.card-body { padding: 12px 18px 18px; }
+
+/* SCRIPT LINE — the main hover expand */
+.script-line {
+  font-size: 17px; font-weight: 500; line-height: 1.6;
+  padding: 10px 14px; border-radius: 8px; cursor: default;
+  transition: font-size 0.2s ease, background 0.2s ease, padding 0.2s ease, border-color 0.2s ease;
+  border: 1.5px solid transparent;
+}
+.script-line:hover {
+  font-size: 21px; background: #fffdf5;
+  border-color: #e8d98a; padding: 14px 18px;
+}
+.script-line .var { font-weight: 700; font-style: italic; }
+
+/* TIP */
+.tip {
+  background: #fffbf0; border: 1px solid #e8d98a;
+  border-radius: 6px; padding: 10px 14px;
+  font-size: 13px; color: #6b5c10; margin-top: 10px; line-height: 1.55;
+}
+.tip::before { content: "💬  "; }
+
+/* BRANCH */
+.branch { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.branch-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 14px; border-radius: 8px;
+  border: 1.5px solid transparent; cursor: default;
+  transition: font-size 0.2s, background 0.2s, padding 0.2s, border-color 0.2s;
+}
+.branch-row:hover { font-size: 17px; background: #fffdf5; border-color: #e8d98a; padding: 14px 16px; }
+.branch-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; font-family: 'DM Mono', monospace;
+  padding: 3px 8px; border-radius: 4px; white-space: nowrap; margin-top: 2px; flex-shrink: 0;
+}
+.tag-agency { background: rgba(37,99,168,.1); color: var(--c1); }
+.tag-alone  { background: rgba(124,58,173,.1); color: var(--c2); }
+.branch-text { font-size: 15px; font-weight: 500; line-height: 1.5; }
+
+/* QUESTION CHECKLIST */
+.q-list { display: flex; flex-direction: column; gap: 4px; }
+.q-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 9px 14px; border-radius: 8px; cursor: pointer;
+  transition: font-size 0.2s, background 0.2s, padding 0.2s, border-color 0.2s;
+  border: 1.5px solid transparent; user-select: none;
+}
+.q-item:hover { font-size: 17px; background: #fffdf5; border-color: #e8d98a; padding: 13px 16px; }
+.q-item.checked { opacity: 0.4; text-decoration: line-through; }
+.q-checkbox {
+  width: 20px; height: 20px; border: 2px solid var(--border);
+  border-radius: 4px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: transparent; transition: all 0.15s;
+}
+.q-item.checked .q-checkbox { background: var(--c3); border-color: var(--c3); color: white; }
+.q-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); padding-top: 3px; min-width: 20px; }
+.q-text { font-size: 15px; font-weight: 500; line-height: 1.5; }
+.q-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* APPROVAL */
+.approval-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.approval-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; background: var(--bg); border-radius: 6px;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  border: 1.5px solid transparent; transition: all 0.2s; user-select: none;
+}
+.approval-item:hover { font-size: 16px; background: #fffdf5; border-color: #e8d98a; }
+.approval-item.checked { opacity: 0.4; text-decoration: line-through; }
+.appr-check {
+  width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 50%;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: transparent; transition: all 0.15s;
+}
+.approval-item.checked .appr-check { background: var(--c3); border-color: var(--c3); color: #fff; }
+
+/* CONSULATE LIST */
+.consulate-list { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+.cons-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; border-radius: 6px;
+  font-size: 14.5px; font-weight: 500; cursor: pointer;
+  border: 1.5px solid transparent; transition: all 0.2s; user-select: none;
+}
+.cons-item:hover { background: var(--bg); border-color: var(--border); }
+.cons-item.checked { opacity: 0.4; text-decoration: line-through; }
+.cons-check {
+  width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 3px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: transparent; transition: all 0.15s;
+}
+.cons-item.checked .cons-check { background: var(--c4); border-color: var(--c4); color: #fff; }
+
+/* CLOSE CTA */
+.close-cta {
+  background: #fff8f8; border: 2px solid #f5c6c6;
+  border-radius: 10px; padding: 20px 22px; cursor: default;
+  transition: all 0.2s;
+}
+.cta-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--c5);
+  font-family: 'DM Mono', monospace; margin-bottom: 10px;
+}
+.cta-text {
+  font-size: 18px; font-weight: 600; line-height: 1.6;
+  transition: font-size 0.2s;
+}
+.close-cta:hover .cta-text { font-size: 22px; }
+
+/* RESISTANCE */
+.resist-steps { display: flex; flex-direction: column; gap: 12px; }
+.r-step {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px; border-radius: 10px;
+  background: var(--white); border: 1px solid var(--border);
+  cursor: default; transition: all 0.2s;
+}
+.r-step:hover { background: #f0fafb; border-color: #9dd5de; transform: scale(1.005); }
+.r-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+  background: rgba(14,116,144,.1); color: var(--c6);
+}
+.r-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; font-family: 'DM Mono', monospace;
+  color: var(--muted); margin-bottom: 5px;
+}
+.r-text { font-size: 15.5px; font-weight: 500; line-height: 1.6; transition: font-size 0.2s; }
+.r-step:hover .r-text { font-size: 18px; }
+.r-text strong { color: var(--c6); }
+
+/* SCORE GRID */
+.score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
+.score-card {
+  border-radius: 8px; padding: 12px 14px;
+  border: 1px solid var(--border); cursor: default; transition: all 0.2s;
+}
+.score-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+.sc-range { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.sc-text { font-size: 13px; line-height: 1.5; }
+.score-low  { background: #fff5f5; border-color: #fca5a5; }
+.score-mid  { background: #fffbeb; border-color: #fcd34d; }
+.score-high { background: #f0fdf4; border-color: #86efac; }
+.score-low  .sc-range { color: #b91c1c; }
+.score-mid  .sc-range { color: #92400e; }
+.score-high .sc-range { color: #166534; }
+
+/* NAV BUTTONS */
+.nav-buttons {
+  display: flex; gap: 10px; margin-top: 8px;
+  padding-top: 16px; border-top: 1px solid var(--border);
+}
+.btn {
+  padding: 10px 20px; border-radius: 7px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+}
+.btn-prev { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.btn-prev:hover { background: var(--border); color: var(--text); }
+.btn-next { background: var(--text); color: #fff; margin-left: auto; }
+.btn-next:hover { opacity: 0.82; }
+
+.kbd-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--muted);
+  text-align: center; margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="brand">Visaflow</div>
+    <div class="topbar-title">Sales Call Script</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="prog-dot active" onclick="goTo(0)" title="Open"></div>
+    <div class="prog-dot" onclick="goTo(1)" title="Discover"></div>
+    <div class="prog-dot" onclick="goTo(2)" title="Qualify"></div>
+    <div class="prog-dot" onclick="goTo(3)" title="Present"></div>
+    <div class="prog-dot" onclick="goTo(4)" title="Close"></div>
+    <div class="prog-dot" onclick="goTo(5)" title="Resistance"></div>
+    <div class="phase-counter" id="counter">1 / 6</div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-item p1 active" onclick="goTo(0)">
+      <div class="s-num">1</div>
+      <div class="s-label">Open</div>
+    </div>
+    <div class="sidebar-item p2" onclick="goTo(1)">
+      <div class="s-num">2</div>
+      <div class="s-label">Discover</div>
+    </div>
+    <div class="sidebar-item p3" onclick="goTo(2)">
+      <div class="s-num">3</div>
+      <div class="s-label">Qualify</div>
+    </div>
+    <div class="sidebar-item p4" onclick="goTo(3)">
+      <div class="s-num">4</div>
+      <div class="s-label">Present</div>
+    </div>
+    <div class="sidebar-item p5" onclick="goTo(4)">
+      <div class="s-num">5</div>
+      <div class="s-label">Close</div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item p6" onclick="goTo(5)">
+      <div class="s-num">⚡</div>
+      <div class="s-label">Resistance<br>"Need to ask wife"</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- PHASE 1: OPEN -->
+    <div class="phase-block visible" id="phase-0">
+      <div class="phase-heading p1">
+        <div class="phase-icon p1">👋</div>
+        <div><h2>Open</h2><div class="phase-sub">First words on the call</div></div>
+      </div>
+      <div class="card p1">
+        <div class="card-header"><span class="card-tag t1">Opening Line</span></div>
+        <div class="card-body">
+          <div class="script-line">"Hey <span class="var">[Name]</span>, this is Dan from Visaflow — global visa services. I'm calling you as I see here that you reached out to us regarding your <span class="var">[specific visa]</span>."</div>
+        </div>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-next" onclick="goTo(1)">Next: Discover →</button>
+      </div>
+      <div class="kbd-hint">← → arrow keys to navigate</div>
+    </div>
+
+    <!-- PHASE 2: DISCOVER -->
+    <div class="phase-block" id="phase-1">
+      <div class="phase-heading p2">
+        <div class="phase-icon p2">🔍</div>
+        <div><h2>Discover</h2><div class="phase-sub">Understand what they actually want</div></div>
+      </div>
+      <div class="card p2">
+        <div class="card-header"><span class="card-tag t2">Q1 · Reason for Contact</span></div>
+        <div class="card-body">
+          <div class="script-line">"So tell me, <span class="var">[Name]</span> — what brings you to us today?"</div>
+          <div class="tip">If not elaborating → "Oh, if so, I'll tell our marketing team they did a great job — haha."</div>
+        </div>
+      </div>
+      <div class="card p2">
+        <div class="card-header"><span class="card-tag t2">Q2 · Priority</span></div>
+        <div class="card-body">
+          <div class="script-line">"What's most important to you — getting the visa <strong>fast</strong>, or <strong>improving your approval chances</strong>?"</div>
+        </div>
+      </div>
+
+      <!-- RESISTANCE: PRICE PUSHER -->
+      <div class="card" style="border-top:3px solid #d97706; background:#fffbf5;">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="card-tag" style="background:rgba(217,119,6,.12);color:#d97706;">⚡ Resistance · "Just tell me the price"</span>
+          <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">If they cut to cost before questions</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:10px;">Trigger: Lead asks "How much does it cost?" before you've qualified</div>
+          <div class="script-line" style="background:#fff7ed;border:1.5px solid #fed7aa;">"Hey, I totally understand — and I respect that you want to cut through the chase and get to the bottom line. But for me to help you better and not waste your time, I need to ask you just a few quick questions first."</div>
+          <div class="tip" style="background:#fff7ed;border-color:#fed7aa;color:#78350f;">Then continue naturally into Q2 → Qualify flow. The goal is to earn the right to present the price with full context behind it.</div>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-prev" onclick="goTo(0)">← Back</button>
+        <button class="btn btn-next" onclick="goTo(2)">Next: Qualify →</button>
+      </div>
+    </div>
+
+    <!-- PHASE 3: QUALIFY -->
+    <div class="phase-block" id="phase-2">
+      <div class="phase-heading p3">
+        <div class="phase-icon p3">📋</div>
+        <div><h2>Qualify</h2><div class="phase-sub">Profile the lead — click to check off each question</div></div>
+      </div>
+      <div class="card p3">
+        <div class="card-header"><span class="card-tag t3">Q3–4 · Application History</span></div>
+        <div class="card-body">
+          <div class="script-line">"Is this your first time applying for a visa?"</div>
+          <div class="script-line" style="margin-top:8px;">"How did you apply before — by yourself or with an agency?"</div>
+          <div class="branch">
+            <div class="branch-row">
+              <div class="branch-tag tag-agency">Agency</div>
+              <div class="branch-text">"Great — was it a good experience applying with them?"<br><span style="color:var(--muted);font-size:13px;font-style:italic;">→ "Because usually, our clients always come back."</span></div>
+            </div>
+            <div class="branch-row">
+              <div class="branch-tag tag-alone">Alone</div>
+              <div class="branch-text">"What's the reason you're looking for professional help this time?"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card p3">
+        <div class="card-header"><span class="card-tag t3">Q5–10 · Trip & Profile</span></div>
+        <div class="card-body">
+          <div class="q-list">
+            <div class="q-item" onclick="toggleCheck(this)">
+              <div class="q-checkbox">✓</div><div class="q-num">Q5</div>
+              <div><div class="q-text">For how long are you planning this trip?</div></div>
+            </div>
+            <div class="q-item" onclick="toggleCheck(this)">
+              <div class="q-checkbox">✓</div><div class="q-num">Q6</div>
+              <div><div class="q-text">When are you planning to travel?</div><div class="q-note">If no date → ask "why now?"</div></div>
+            </div>
+            <div class="q-item" onclick="toggleCheck(this)">
+              <div class="q-checkbox">✓</div><div class="q-num">Q7</div>
+              <div><div class="q-text">Who are you travelling with?</div></div>
+            </div>
+            <div class="q-item" onclick="toggleCheck(this)">
+              <div class="q-checkbox">✓</div><div class="q-num">Q8</div>
+              <div><div class="q-text">What do you do for a living?</div><div class="q-note">💬 Open small talk — find something in common, build rapport before moving on.</div></div>
+            </div>
+            <div class="q-item" onclick="toggleCheck(this)">
+              <div class="q-checkbox">✓</div><div class="q-num">Q9</div>
+              <div><div class="q-text">Where are you from? How old are you?</div></div>
+            </div>
+            <div class="q-item" onclick="toggleCheck(this)">
+              <div class="q-checkbox">✓</div><div class="q-num">Q10</div>
+              <div><div class="q-text">What passport do you hold?</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card p3">
+        <div class="card-header"><span class="card-tag t3">Summary Approval Loop</span></div>
+        <div class="card-body">
+          <div class="script-line">"Ok <span class="var">[Name]</span>, let me quickly recap to make sure I have it right:"</div>
+          <div class="approval-grid">
+            <div class="approval-item" onclick="toggleCheck(this)"><div class="appr-check">✓</div>Confirm reason for travel</div>
+            <div class="approval-item" onclick="toggleCheck(this)"><div class="appr-check">✓</div>Confirm reason for contacting us</div>
+            <div class="approval-item" onclick="toggleCheck(this)"><div class="appr-check">✓</div>Confirm one more key detail</div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-prev" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-next" onclick="goTo(3)">Next: Present →</button>
+      </div>
+    </div>
+
+    <!-- PHASE 4: PRESENT -->
+    <div class="phase-block" id="phase-3">
+      <div class="phase-heading p4">
+        <div class="phase-icon p4">🎯</div>
+        <div><h2>Present</h2><div class="phase-sub">Explain your offer and what makes you different</div></div>
+      </div>
+      <div class="card p4">
+        <div class="card-header"><span class="card-tag t4">Credibility</span></div>
+        <div class="card-body">
+          <div class="script-line">"So <span class="var">[Name]</span>, let me explain exactly what we offer here at Visaflow and how the entire process works."</div>
+          <div class="tip">We are in the visa industry for 20 years, since 2006 — which means we bring a massive experience and expertise to the table. And what we do best, <span style="font-style:italic">[Name]</span>, is to manage for you the entire process from A to the point you get the visa in your hand.</div>
+        </div>
+      </div>
+      <div class="card p4" style="border-top:3px solid #0e7490;background:#f0fafb;">
+        <div class="card-header"><span class="card-tag" style="background:rgba(14,116,144,.1);color:#0e7490;">✋ Check-in · Same Page?</span></div>
+        <div class="card-body">
+          <div class="script-line" style="background:#e8f7fa;border:1.5px solid #9dd5de;">"Up until this point — was I clear, <span class="var">[Name]</span>?"</div>
+          <div class="tip" style="background:#f0fafb;border-color:#9dd5de;color:#0e5f6e;">Wait for confirmation before moving on. If hesitation → re-explain the last point in simpler terms.</div>
+        </div>
+      </div>
+
+      <div class="card p4">
+        <div class="card-header"><span class="card-tag t4">Consulate Requirements</span></div>
+        <div class="card-body">
+          <div class="script-line">"Let me walk you through the journey we're about to take together."</div>
+          <div style="font-size:12px;color:var(--muted);margin:12px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">To get a <span style="color:var(--c4);font-style:italic;">[Visa type]</span> the <span style="color:var(--c4);font-style:italic;">[Destination]</span> visa department expects:</div>
+          <div class="consulate-list">
+            <div class="cons-item" onclick="toggleCheck(this)"><div class="cons-check">✓</div>Completed application form</div>
+            <div class="cons-item" onclick="toggleCheck(this)"><div class="cons-check">✓</div>Visa photos</div>
+            <div class="cons-item" onclick="toggleCheck(this)"><div class="cons-check">✓</div>Travel medical insurance (€30,000 minimum)</div>
+            <div class="cons-item" onclick="toggleCheck(this)"><div class="cons-check">✓</div>Proof of travel (flights)</div>
+            <div class="cons-item" onclick="toggleCheck(this)"><div class="cons-check">✓</div>Accommodation confirmation</div>
+            <div class="cons-item" onclick="toggleCheck(this)"><div class="cons-check">✓</div>Visa fee — €90 adults / €45 children</div>
+          </div>
+          <div class="script-line" style="margin-top:14px;background:#fffbf0;border:1.5px solid #e8d98a;">"And this is exactly where we step into the picture."</div>
+        </div>
+      </div>
+      <div class="card p4">
+        <div class="card-header"><span class="card-tag t4">Differentiator</span></div>
+        <div class="card-body">
+          <div class="script-line">"And this is where we step into the picture. Unlike other agencies we don't use fake bookings. We provide actual flight tickets, real hotel stays, and full insurance coverage, so your application is 100% solid and professional so you don't need to worry if the consulate will verify your docs."</div>
+        </div>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-prev" onclick="goTo(2)">← Back</button>
+        <button class="btn btn-next" onclick="goTo(4)">Next: Close →</button>
+      </div>
+    </div>
+
+    <!-- PHASE 5: CLOSE -->
+    <div class="phase-block" id="phase-4">
+      <div class="phase-heading p3">
+        <div class="phase-icon p3">💰</div>
+        <div><h2>Close</h2><div class="phase-sub">Summarize the case — bridge to pricing</div></div>
+      </div>
+      <div class="close-cta" style="background:#f0fdf4;border-color:#86efac;">
+        <div class="cta-label" style="color:var(--c3);">Closing Line</div>
+        <div class="cta-text">"And that's it, <span style="color:var(--c3);font-style:italic">[Name]</span>. Based on my experience and the fact that you have:</div>
+        <div style="margin:14px 0 14px 4px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:500;line-height:1.5;">
+            <span style="background:rgba(26,122,74,.12);color:var(--c3);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap;margin-top:2px;">1</span>
+            Stable job and income / properties
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:500;line-height:1.5;">
+            <span style="background:rgba(26,122,74,.12);color:var(--c3);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap;margin-top:2px;">2</span>
+            Past visa approvals / travel history
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:500;line-height:1.5;">
+            <span style="background:rgba(26,122,74,.12);color:var(--c3);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap;margin-top:2px;">3</span>
+            Wife and kids
+          </div>
+        </div>
+        <div class="cta-text">— I'm confident we can get this visa approved.</div>
+        <div class="cta-text" style="margin-top:14px;">"So, before we move forward and get started — I believe you want to know the cost."</div>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-prev" onclick="goTo(3)">← Back</button>
+        <button class="btn btn-next" onclick="goTo(5)" style="background:var(--c6);">Objection: Need to ask wife ⚡</button>
+      </div>
+    </div>
+
+    <!-- PHASE 6: RESISTANCE -->
+    <div class="phase-block" id="phase-5">
+      <div class="phase-heading p6">
+        <div class="phase-icon p6">⚡</div>
+        <div><h2>Resistance</h2><div class="phase-sub">"I need to consult with my wife" · 1–10 Method</div></div>
+      </div>
+      <div class="card p6">
+        <div class="card-header"><span class="card-tag t6">4-Step Response</span></div>
+        <div class="card-body">
+          <div class="resist-steps">
+            <div class="r-step">
+              <div class="r-num">1</div>
+              <div><div class="r-label">Validate</div>
+              <div class="r-text">"Absolutely — after all, you travel <strong>together</strong>."</div></div>
+            </div>
+            <div class="r-step">
+              <div class="r-num">2</div>
+              <div><div class="r-label">Reframe</div>
+              <div class="r-text">"But let's assume your wife is <strong>in it with us</strong> — she's on board."</div></div>
+            </div>
+            <div class="r-step">
+              <div class="r-num">3</div>
+              <div><div class="r-label">Temperature Check</div>
+              <div class="r-text">"I want to understand from <strong>you</strong> — are you 100% confident in starting the process with us? let's say, on a scale of <strong>1 to 10</strong>, where are you at?"</div></div>
+            </div>
+            <div class="r-step">
+              <div class="r-num">4</div>
+              <div><div class="r-label">Respond to the Number</div>
+              <div class="r-text">Based on their score, address the gap:</div>
+              <div class="score-grid">
+                <div class="score-card score-low">
+                  <div class="sc-range">1 – 5</div>
+                  <div class="sc-text">"What's holding you back? What would need to be true for you to feel fully confident?"</div>
+                </div>
+                <div class="score-card score-mid">
+                  <div class="sc-range">6 – 8</div>
+                  <div class="sc-text">"You're close — what's the one thing stopping you from being a 10?"</div>
+                </div>
+                <div class="score-card score-high">
+                  <div class="sc-range">9 – 10</div>
+                  <div class="sc-text">"Perfect — let's not wait. Open your file now and loop your wife in on the details."</div>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-prev" onclick="goTo(4)">← Back to Close</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let current = 0;
+const total = 6;
+
+function goTo(index) {
+  document.querySelector('#phase-' + current).classList.remove('visible');
+  document.querySelectorAll('.sidebar-item')[current].classList.remove('active');
+  document.querySelectorAll('.prog-dot')[current].classList.remove('active');
+  document.querySelectorAll('.prog-dot')[current].classList.add('done');
+
+  current = index;
+
+  document.querySelector('#phase-' + current).classList.add('visible');
+  document.querySelectorAll('.sidebar-item')[current].classList.add('active');
+  document.querySelectorAll('.prog-dot')[current].classList.add('active');
+  document.querySelectorAll('.prog-dot')[current].classList.remove('done');
+  document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowRight' && current < total - 1) goTo(current + 1);
+  if (e.key === 'ArrowLeft'  && current > 0)         goTo(current - 1);
+});
+</script>
+</body>
+</html>
